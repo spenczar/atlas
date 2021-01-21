@@ -37,7 +37,7 @@ typecheck: $(VENV)/mypy
 test: $(VENV)/pytest
 	$(VENV)/pytest .
 
-precommit: format typecheck lint
+precommit: format typecheck lint test
 
 
 .PHONY: clean
