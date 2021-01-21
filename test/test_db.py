@@ -23,6 +23,26 @@ class TestDatabase:
     def test_open_database(self, leveldb_5k):
         atlas.open_db(leveldb_5k)
 
+    def test_count_candidates(self, leveldb_5k):
+        db = atlas.open_db(leveldb_5k)
+        n = db.count_candidates()
+        assert n == 5000
+
+    def test_count_objects(self, leveldb_5k):
+        db = atlas.open_db(leveldb_5k)
+        n = db.count_objects()
+        assert n == 4848
+
+    def test_count_timestamps(self, leveldb_5k):
+        db = atlas.open_db(leveldb_5k)
+        n = db.count_timestamps()
+        assert n == 11
+
+    def test_count_healpixels(self, leveldb_5k):
+        db = atlas.open_db(leveldb_5k)
+        n = db.count_healpixels()
+        assert n == 4216
+
     def test_open_missing_db(self):
         with pytest.raises(Exception):
             atlas.open_db("bogus")
