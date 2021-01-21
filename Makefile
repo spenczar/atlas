@@ -6,7 +6,7 @@ $(VENV): virtualenv
 $(VENV)/pip: $(VENV)
 
 .git/hooks/pre-commit:
-	ln -sf ../../dev/pre-commit.sh
+	ln -sf ../../dev/pre-commit.sh .git/hooks/pre-commit
 
 
 # Development tools
