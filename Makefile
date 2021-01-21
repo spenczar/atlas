@@ -15,20 +15,27 @@ dev-setup: .git/hooks/pre-commit $(VENV)/flake8 $(VENV)/black $(VENV)/mypy
 deps: $(VENV)
 	$(VENV)/pip install -e '.[dev]'
 
-$(VENV)/flake8 $(VENV)/black $(VENV)/mypy &: $(VENV)/pip
+$(VENV)/flake8 $(VENV)/black $(VENV)/mypy $(VENV)/pytest &: $(VENV)/pip
 	$(VENV)/pip install -e '.[dev]'
 
-.PHONY: lint format typecheck precommit
+.PHONY: lint format typecheck precommit test
 lint: $(VENV)/flake8
 	$(VENV)/flake8 ./src
+	$(VENV)/flake8 ./test
 
 format: $(VENV)/black
 	$(VENV)/black \
 		--target-version py38 \
 		./src/atlas
+	$(VENV)/black \
+		--target-version py38 \
+		./test
 
 typecheck: $(VENV)/mypy
 	$(VENV)/mypy ./src
+
+test: $(VENV)/pytest
+	$(VENV)/pytest .
 
 precommit: format typecheck lint
 
