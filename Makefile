@@ -18,10 +18,20 @@ deps: $(VENV)
 $(VENV)/flake8 $(VENV)/black $(VENV)/mypy $(VENV)/pytest &: $(VENV)/pip
 	$(VENV)/pip install -e '.[dev]'
 
-.PHONY: lint format typecheck precommit test
+.PHONY: lint check-format format typecheck precommit test
 lint: $(VENV)/flake8
 	$(VENV)/flake8 ./src
 	$(VENV)/flake8 ./test
+
+check-format: $(VENV)/black
+	$(VENV)/black \
+		--target-version py38 \
+		--check \
+		./src/atlas
+	$(VENV)/black \
+		--target-version py38 \
+		--check \
+		./test
 
 format: $(VENV)/black
 	$(VENV)/black \
@@ -37,7 +47,7 @@ typecheck: $(VENV)/mypy
 test: $(VENV)/pytest
 	$(VENV)/pytest .
 
-precommit: format typecheck lint test
+precommit: check-format typecheck lint test
 
 
 .PHONY: clean
