@@ -2,7 +2,8 @@ from typing import List
 
 import atlas.encoding
 
-class TestUint64Packing():
+
+class TestUint64Packing:
     def _test_unpacking(self, hexinput: str, expected: List[int]):
         byteinput = bytearray.fromhex(hexinput)
         have = atlas.encoding.unpack_uint64s(byteinput)
