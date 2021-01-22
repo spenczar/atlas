@@ -1,55 +1,84 @@
-from typing import List
-
 import atlas.encoding
 import pytest
 
 
+class TestVarintPacking:
+    cases = [
+        (
+            [],
+            bytearray.fromhex(""),
+        ),
+        (
+            [0],
+            bytearray.fromhex("00"),
+        ),
+        (
+            [1, 2, 3, 4],
+            bytearray.fromhex("02040608"),
+        ),
+        (
+            [128, 256, 512],
+            bytearray.fromhex("800280048008"),
+        ),
+        (
+            [1 << 32, 1 << 60, (1 << 63) - 1],
+            bytearray.fromhex(
+                "8080 8080 2080 8080" + "8080 8080 8020 feff" + "ffff ffff ffff ff01"
+            ),
+        ),
+    ]
+
+    @pytest.mark.parametrize("values,encoded", cases)
+    def test_packing(self, values, encoded):
+        have = atlas.encoding.pack_varint_list(values)
+        assert have == encoded
+
+    @pytest.mark.parametrize("values,encoded", cases)
+    def test_unpacking(self, values, encoded):
+        have = atlas.encoding.unpack_varint_list(encoded)
+        assert have == values
+
+
 class TestUint64Packing:
-    def _test_unpacking(self, hexinput: str, expected: List[int]):
-        byteinput = bytearray.fromhex(hexinput)
-        have = atlas.encoding.unpack_uint64s(byteinput)
-        assert have == expected
+    cases = [
+        (
+            [],
+            bytearray.fromhex(""),
+        ),
+        (
+            [0],
+            bytearray.fromhex("0000 0000 0000 0000"),
+        ),
+        (
+            [1, 2, 3, 4],
+            bytearray.fromhex(
+                "0000 0000 0000 0001"
+                + "0000 0000 0000 0002"
+                + "0000 0000 0000 0003"
+                + "0000 0000 0000 0004"
+            ),
+        ),
+        (
+            [1 << 32, 1 << 60, (1 << 64) - 1],
+            bytearray.fromhex(
+                "0000 0001 0000 0000" + "1000 0000 0000 0000" + "ffff ffff ffff ffff",
+            ),
+        ),
+    ]
 
-    def _test_pack(self, val: int, expected: str):
-        have = atlas.encoding.pack_uint64(val)
-        assert have == bytearray.fromhex(expected)
+    @pytest.mark.parametrize("values,encoded", cases)
+    def test_unpack(self, values, encoded):
+        have = atlas.encoding.unpack_uint64s(encoded)
+        assert have == values
 
-    def test_pack_zero(self):
-        self._test_pack(0, "0000 0000 0000 0000")
-
-    def test_pack_max(self):
-        self._test_pack((1 << 64) - 1, "ffff ffff ffff ffff")
+    @pytest.mark.parametrize("values,encoded", cases)
+    def test_pack(self, values, encoded):
+        have = atlas.encoding.pack_uint64s(values)
+        assert have == encoded
 
     def test_pack_overflow(self):
         with pytest.raises(Exception):
             atlas.encoding.pack_uint64(1 << 64)
-
-    def test_unpack_empty(self):
-        self._test_unpacking("", [])
-
-    def test_unpack_one(self):
-        self._test_unpacking("0000 0000 0000 0000", [0])
-
-    def test_unpack_several(self):
-        self._test_unpacking(
-            "0000 0000 0000 0001"
-            + "0000 0000 0000 0002"
-            + "0000 0000 0000 0003"
-            + "0000 0000 0000 0004",
-            [1, 2, 3, 4],
-        )
-
-    def test_unpack_large_several(self):
-        self._test_unpacking(
-            "0000 0001 0000 0000" + "1000 0000 0000 0000" + "ffff ffff ffff ffff",
-            [1 << 32, 1 << 60, (1 << 64) - 1],
-        )
-
-    def test_unpack_single_large(self):
-        self._test_unpacking(
-            "ffff ffff ffff ffff",
-            [(1 << 64) - 1],
-        )
 
     def test_unpack_incomplete_input(self):
         with pytest.raises(Exception):
